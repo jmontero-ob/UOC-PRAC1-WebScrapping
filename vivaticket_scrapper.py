@@ -1,3 +1,5 @@
+import pandas
+import numpy
 import requests
 from bs4 import BeautifulSoup
 
@@ -6,41 +8,50 @@ from selenium.webdriver.chrome.options import Options
 
 import re
 
+from koobin_scrapper_functions import llegeix_vivaticket_sessio
+
 DRIVER_PATH = "d:\\UOC_ML\\chromedriver.exe"
 options = Options()
 options.headless = True
 options.add_argument("--window-size=1920,1200")
 
-str = "https://shop.vivaticket.com/eng/sell/?cmd=tabellaPrezzi&pcode=7608000&tcode=vt0000450&qubsq=de8bf77b-8a28-4a83-853c-54438166ea3b&qubsp=5e498339-9e96-4fe7-a92b-b3954796defa&qubsts=1603987983&qubsc=bestunion&qubse=vivaticketserver&qubsrt=Safetynet&qubsh=e24a55649dbb85a77564e7248e96223f"
 
-#str = "https://www.vivaticket.com/it/ticket/spellbound-25/151816"
+
+# Opera amb Andrea Bocelli
+
+v_url_opera = "https://shop.vivaticket.com/eng/sell/?cmd=tabellaPrezzi&pcode=7682216&tcode=vt0004330"
+
+#Inicialitzo dataframe
+v_cab = ['Ticketera', 'Tipus Event', 'Recinte', 'Event','Sessio','Zona Preu','Preu','Data Registre']
+#cab = ['Ticketera', 'Tipus Event', 'Recinte','Event','Sessio','Zona Preu','Preu','Data Registre']
+v_data_viva = pandas.DataFrame(columns=v_cab)
+
+# Opera amb Andrea Bocelli
+data_butter = llegeix_vivaticket_sessio(v_url_opera, 'Opera')
+v_data_viva = v_data_viva.append(data_butter)
+
+# Teatre amb La Dvina Comedia
+# Event amb multiples sesions : primer iterem per las sesions i cridarem a la funció per treure les dades
+# de les session, que tenen el mateix format que les de Opera de Bocelli
+
+v_url_teatre = 'https://www.vivaticket.com/it/ticket/la-divina-commedia-opera-musical/148116'
 
 driver = webdriver.Chrome(options=options, executable_path=DRIVER_PATH)
-driver.get(str)
-print(driver.page_source)
-print(type(driver.page_source))
-print(driver.title)
+driver.get(v_url_teatre)
+
+# Busquem els links
+v_links = driver.find_elements_by_tag_name('a')
+for elem in v_links:
+    href = elem.get_attribute('href')
+    result = href.startswith('https://shop.vivaticket.com/ita/sell/?cmd=tabellaPrezzi&pcode=')
+    if result == True:
+        #LCrida a la funció per tractar la sessió
+        data_butter = llegeix_vivaticket_sessio(href, 'Teatre')
+        v_data_viva = v_data_viva.append(data_butter)
 
 driver.quit()
 
-#user_agent_desktop = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '\
-#'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 '\
-#'Safari/537.36'
+print('Scrapper VivaTicket executat correctament. Volcant les dades a fitxer')
 
-#v_headers = {
-#    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,\
-#    */*;q=0.8",
-#    "Accept-Encoding": "gzip, deflate, sdch, br",
-#    "Accept-Language": "en-US,en;q=0.8",
-#    "Cache-Control": "no-cache",
-#    "dnt": "1",
-#    "Pragma": "no-cache",
-#    "Upgrade-Insecure-Requests": "1",
-#    "User-Agent": user_agent_desktop}
-
-#get the page
-#page = requests.get(str, headers=v_headers)
-#get the soup
-#soup = BeautifulSoup(page.content,features="html.parser")
-
-#print(soup)
+#Escriure dataframe a fitxer
+v_data_viva.to_csv('d:\Vivatickets_prices.csv',encoding='utf-8',index=False)
