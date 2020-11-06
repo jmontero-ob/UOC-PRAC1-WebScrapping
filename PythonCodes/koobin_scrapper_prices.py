@@ -1,9 +1,9 @@
 import pandas
-import numpy
+#import numpy
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
-import re
+#from datetime import datetime
+#import re
 
 from koobin_scrapper_functions import llegeix_koobin_sessio
 
@@ -44,9 +44,8 @@ v_data_koobin = pandas.DataFrame(columns=v_cab)
 for link in v_soup_evento.find_all('a'):
     if link.get('href').find('https://operaoviedo.koobin.com/index.php?action=PU_evento') != -1:
         #print(link.get('href'))
-        data_butter = llegeix_koobin_sessio(link.get('href'),'Opera',v_headers)
+        data_butter = llegeix_koobin_sessio(link.get('href'), 'Opera', v_headers)
         v_data_koobin = v_data_koobin.append(data_butter)
-
 
 #
 # Main : Teatre al Liceu
@@ -82,7 +81,50 @@ data_butter = llegeix_koobin_sessio(v_url_evento,'Basket',v_headers)
 v_data_koobin = v_data_koobin.append(data_butter)
 
 
+#
+# Main : Musica amb Noa al Teatro de la Maestranza
+#
+v_url_evento = "https://teatrodelamaestranza.koobin.es/index.php?action=PU_evento&Ev_id=480"
+# Petició a la pàgina web
+req = requests.get(v_url_evento,headers = v_headers)
+
+# Passem el codi obtingut a la variable codigo
+codigo = req.status_code
+
+# Si el codi ens ha retornat el valor de 200 continuem
+if codigo == 200:
+    # Agafem el contingut HTML de la web cap a un objecte BeautifulSoup()
+    soup = BeautifulSoup(req.content, "html.parser")
+
+    data_butter = llegeix_koobin_sessio(v_url_evento, 'Musica', v_headers)
+    v_data_koobin = v_data_koobin.append(data_butter)
+
+else:
+    print("Codi d'estat del servidor: ", codigo)
+
+#
+# Main : Musica amb Jose Mercé al Palau de les Arts
+#
+v_url_evento ="https://lesarts.koobin.com/index.php?action=PU_evento&Ev_id=4238"
+# Petició a la pàgina web
+req = requests.get(v_url_evento,headers = v_headers)
+
+# Passem el codi obtingut a la variable codigo
+codigo = req.status_code
+
+# Si el codi ens ha retornat el valor de 200 continuem
+if codigo == 200:
+    # Agafem el contingut HTML de la web cap a un objecte BeautifulSoup()
+    soup = BeautifulSoup(req.content, "html.parser")
+
+    data_butter = llegeix_koobin_sessio(v_url_evento, 'Musica', v_headers)
+    v_data_koobin = v_data_koobin.append(data_butter)
+
+else:
+    print("Codi d'estat del servidor: ", codigo)
+
+
 print('Scrapper Koobin executat correctament. Volcant les dades a fitxer')
 
 #Escriure dataframe a fitxer
-v_data_koobin.to_csv('d:\koobin_prices.csv',encoding='utf-8',index=False)
+v_data_koobin.to_csv('D:\koobin_prices.csv',encoding='utf-8',index=False)
